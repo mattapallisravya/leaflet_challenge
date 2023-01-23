@@ -22,24 +22,24 @@ let Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest
 function createMap(earthquakes) {
             
             // Create a baseMaps object.
-            var baseMaps = {
+            let baseMaps = {
                 "Street Map": street,
-                "Topographic": topo,
-                "Water Color": Stamen_Watercolor,
-                "World img": Esri_WorldImagery
+                "Topographic Map": topo,
+                "Stamen Watercolor Map": Stamen_Watercolor,
+                "Esri WorldImagery Map": Esri_WorldImagery
               };
 
             // Create an overlay object to hold our overlay.
-            var overlayMaps = {
+            let overlayMaps = {
             Earthquakes: earthquakes
             };
 
             // Create our map, giving it the streetmap and earthquakes layers to display on load.
-            var myMap = L.map("map", {
+            let myMap = L.map("map", {
               center: [
                 37.09, -95.71
               ],
-              zoom: 5,
+              zoom: 3,
               layers: [street, earthquakes]
             });
 
@@ -49,10 +49,41 @@ function createMap(earthquakes) {
             L.control.layers(baseMaps, overlayMaps, {
               collapsed: false
             }).addTo(myMap);
+            myMap.on('overlayadd',function(e){
+              alert(e.name+" was just turned on")
+            });
+            myMap.on('overlayremove', function(e){
+              alert(e.name+ " was just turned off")
+            })
+            
+          // Set up the legend.
+          let legend = L.control({ position: "bottomright" });
+          legend.onAdd = function() {
+            let div = L.DomUtil.create("div", "info legend");
+            let limits = [0,10, 20, 30, 40, 50, 60, 70, 80, 90]
+            let colors = ["#98FB98","#FF69B4","#FA8072","#E9967A","#FFA07A","#DC143C","#FF0000","#B22222","#FF4500", "#800000"]
+           labels=[]
+
+            // Add the minimum and maximum.
+            let legendInfo = "<h1>Depth of earthquake<br /></h1>" +
+              "<div class=\"labels\">" 
+             "</div>";
+
+            div.innerHTML = legendInfo;
+
+            limits.forEach(function(limit, index) {
+              div.innerHTML += "<i style='background: " + colors[index] + "'></i> "
+            +limits[index] + (limits[index + 1] ? "&ndash;" + limits[index + 1] +"<br>": "+");
+             
+            });
+            
+          return div;
+          };
+
+          // Adding the legend to the map
+          legend.addTo(myMap);
 
 }
-
-
 
 // Perform a GET request to the query URL/
 d3.json(queryUrl).then(function (data) {
@@ -67,7 +98,9 @@ function createFeatures(earthquakeData) {
   // Give each feature a popup that describes the place and time of the earthquake.
   
   function onEachFeature(feature, layer) {
-    layer.bindPopup(`<h3>${feature.properties.place}</h3><hr><p>${new Date(feature.properties.time)}</p><p>Magnitude: ${feature.properties.mag}</p><p>depth: ${feature.geometry.coordinates[2]}</p>`);
+    layer.bindPopup(`<h3>${feature.properties.place}</h3><hr><p>${new Date(feature.properties.time)}</p>
+                    <p>Magnitude: ${feature.properties.mag}</p>
+                    <p>depth: ${feature.geometry.coordinates[2]}</p>`);
   }
 
   function createCircleMarker(feature, latlng){
@@ -96,33 +129,38 @@ function createFeatures(earthquakeData) {
 function chooseColor(depth){
     
     if(depth<=10){
-        return "#008000";
+        return "#98FB98";
     }
     else if(depth>10 && depth<=20){
-      return "#FFA500";
+      return "#FF69B4";
     }
     else if(depth>20 && depth<=30){
-      return "#800080";
+      return "#FA8072";
     }
     else if(depth>30 && depth<=40){
-      return "#00FFFF";
+      return "#E9967A";
     }
     else if(depth>40 && depth<=50){
-      return "#0000FF";
+      return "#FFA07A";
     }
     else if(depth>50 && depth<=60){
-      return "#4682B4";
+      return "#DC143C";
     }
-    else if(depth>60 && depth<=80){
-      return "#F0E68C";
+    else if(depth>60 && depth<=70){
+      return "#FF0000";
+    }
+    else if(depth>70 && depth<=80){
+      return "#B22222";
     }
     else if(depth>80 && depth<=90){
-      return "#FF8C00";
+      return "#FF4500";
     }
     else{
-      return "#FF0000";
+      return "#800000";
     }
 
 }
+
+
 
 
